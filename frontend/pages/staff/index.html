@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Notice Management - CampusConnect</title>
+  <meta name="description" content="Manage and publish college notices, hall allocations, and campus events.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/glass.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <style>
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.85);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-size-sm);
+      text-align: left;
+    }
+    th, td {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-divider);
+    }
+    th {
+      background: rgba(22, 58, 99, 0.04);
+      color: var(--color-primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: var(--font-size-xs);
+      letter-spacing: 0.05em;
+    }
+    tr:hover td {
+      background: rgba(22, 58, 99, 0.02);
+    }
+  </style>
+</head>
+<body class="glass-body">
+  <div class="app-container">
+    
+    <!-- Staff Sidebar -->
+    <aside class="sidebar glass-sidebar">
+      <div class="brand-section">
+        <div class="brand-logo" style="background: var(--color-primary);">CC</div>
+        <div class="brand-text">
+          <h1>CampusConnect</h1>
+          <p>Faculty & Staff Portal</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu" aria-label="Staff Navigation">
+        <li class="nav-item">
+          <a href="#notices" class="active" id="nav-notices" onclick="switchStaffTab('notices'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <span>Notice Manager</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="javascript:void(0)" onclick="openNoticeModal()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>New Notice</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#profile" id="nav-profile" onclick="switchStaffTab('profile'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>My Profile</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/student" target="_blank">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Preview Student Feed</span>
+          </a>
+        </li>
+      </nav>
+
+      <!-- Staff Profile & Logout -->
+      <div class="user-profile-panel" style="margin-top: auto; cursor: pointer; transition: background var(--transition-fast);" onclick="switchStaffTab('profile')" title="View Faculty Profile">
+        <div class="user-avatar" id="avatarLetter" style="background: var(--color-primary);">F</div>
+        <div class="user-meta">
+          <div class="name" id="userNameDisplay">Staff Member</div>
+          <div class="role" id="userDeptDisplay">Faculty • CS Dept</div>
+        </div>
+        <button onclick="event.stopPropagation(); CampusConnectAuth.logout();" class="btn-outline" style="padding: 4px 8px; font-size: 11px;" title="Sign Out">
+          Exit
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      
+      <!-- Top Bar -->
+      <header class="top-bar glass-header">
+        <div style="font-weight: 700; color: var(--color-primary); font-size: var(--font-size-lg);" id="headerTitle">
+          Staff Notice Board Administration
+        </div>
+        <div style="display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap;">
+          <button onclick="switchStaffTab('profile')" class="btn-outline" style="font-size: var(--font-size-xs);" title="View Staff Profile">
+            👤 My Profile
+          </button>
+          <button onclick="openNoticeModal()" class="btn-accent" style="font-size: var(--font-size-xs);">
+            + Create Notice
+          </button>
+          <button onclick="CampusConnectAuth.logout()" class="btn-outline" style="font-size: var(--font-size-xs);">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <section class="content-body">
+        
+        <!-- ============ 1. NOTICES MANAGEMENT TAB ============ -->
+        <div id="tabStaffNotices">
+          <!-- Metrics Row -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+            <div class="glass-panel" style="padding: var(--space-4);">
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: 600;">Total Notices</div>
+              <div id="statTotal" style="font-size: 1.8rem; font-weight: 700; color: var(--color-primary);">0</div>
+            </div>
+            <div class="glass-panel" style="padding: var(--space-4);">
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: 600;">Published Live</div>
+              <div id="statPublished" style="font-size: 1.8rem; font-weight: 700; color: var(--color-success);">0</div>
+            </div>
+            <div class="glass-panel" style="padding: var(--space-4);">
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: 600;">Active Drafts</div>
+              <div id="statDrafts" style="font-size: 1.8rem; font-weight: 700; color: var(--color-warning);">0</div>
+            </div>
+            <div class="glass-panel" style="padding: var(--space-4);">
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: 600;">With Attachments</div>
+              <div id="statFiles" style="font-size: 1.8rem; font-weight: 700; color: var(--color-info);">0</div>
+            </div>
+          </div>
+
+          <!-- Filter & Search Controls -->
+          <div class="glass-panel" style="padding: var(--space-4); margin-bottom: var(--space-6); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4);">
+            <div style="display: flex; gap: var(--space-2);">
+              <button class="btn-primary" id="filter-all" style="padding: 4px 12px; font-size: var(--font-size-xs);" onclick="setStatusFilter('all')">All Notices</button>
+              <button class="btn-outline" id="filter-published" style="padding: 4px 12px; font-size: var(--font-size-xs);" onclick="setStatusFilter('published')">Published</button>
+              <button class="btn-outline" id="filter-draft" style="padding: 4px 12px; font-size: var(--font-size-xs);" onclick="setStatusFilter('draft')">Drafts Only</button>
+            </div>
+            <div style="max-width: 300px; width: 100%;">
+              <input type="text" id="tableSearch" class="glass-input" placeholder="Filter by title or department..." oninput="renderTable()">
+            </div>
+          </div>
+
+          <!-- Notices Management Table -->
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Notice Title</th>
+                  <th>Category</th>
+                  <th>Department</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="noticeTableBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: var(--space-8);">
+                    Loading notices from Firestore...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============ 2. STAFF PROFILE TAB ============ -->
+        <div id="tabStaffProfile" style="display: none;">
+          <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; align-items: flex-start;">
+
+            <!-- Profile Info Card -->
+            <div class="glass-panel" style="padding: var(--space-6); min-width: 260px; flex: 1; max-width: 340px;">
+              <div style="text-align: center; margin-bottom: var(--space-5);">
+                <div id="staffProfileAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: #fff; font-size: 2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-3);">F</div>
+                <div id="staffProfileName" style="font-size: var(--font-size-xl); font-weight: 700; color: var(--color-primary);">Faculty Staff</div>
+                <div id="staffProfileRole" style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 2px;">FACULTY & STAFF</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm);">
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Username</span>
+                  <span id="staffProfileUsername" style="font-weight: 600; color: var(--color-primary);">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Email</span>
+                  <span id="staffProfileEmail" style="font-weight: 600; color: var(--color-primary); font-size: 11px;">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Department</span>
+                  <span id="staffProfileDept" style="font-weight: 600; color: var(--color-primary);">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Designation</span>
+                  <span style="font-weight: 600; color: var(--color-primary);">Faculty Author</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0;">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Status</span>
+                  <span class="badge" style="background: var(--color-success-bg); color: var(--color-success); font-weight: 600;">● Active</span>
+                </div>
+              </div>
+
+              <button onclick="CampusConnectAuth.logout()" class="btn-outline" style="width: 100%; margin-top: var(--space-5); color: var(--color-danger); border-color: var(--color-danger);">
+                Sign Out
+              </button>
+            </div>
+
+            <!-- Activity Analytics & Authored Notices -->
+            <div style="flex: 2; min-width: 280px; display: flex; flex-direction: column; gap: var(--space-4);">
+              
+              <!-- Staff Analytics -->
+              <div class="glass-panel" style="padding: var(--space-5);">
+                <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">
+                  📊 Authoring Analytics
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); text-align: center;">
+                  <div style="padding: var(--space-3); background: rgba(22,58,99,0.06); border-radius: var(--radius-md);">
+                    <div id="staffCountNotices" style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-primary);">0</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">Total Authored</div>
+                  </div>
+                  <div style="padding: var(--space-3); background: rgba(0,168,150,0.08); border-radius: var(--radius-md);">
+                    <div id="staffCountEvents" style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-accent);">0</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">Events Published</div>
+                  </div>
+                  <div style="padding: var(--space-3); background: rgba(246,189,96,0.1); border-radius: var(--radius-md);">
+                    <div id="staffCountAttachments" style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-warning);">0</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">PDF Documents</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- My Authored Notices Table -->
+              <div class="glass-panel" style="padding: var(--space-5);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+                  <h3 style="margin: 0; font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">
+                    📝 My Authored Bulletins & Events
+                  </h3>
+                  <button onclick="openNoticeModal()" class="btn-accent" style="font-size: 11px; padding: 4px 10px;">
+                    + Create New
+                  </button>
+                </div>
+                <div id="staffAuthoredList" style="display: flex; flex-direction: column; gap: var(--space-2);">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <!-- Department Privileges -->
+              <div class="glass-panel" style="padding: var(--space-5);">
+                <h3 style="margin: 0 0 var(--space-3); font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">
+                  🛡️ Staff Privileges & Roles
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); font-size: var(--font-size-xs);">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; padding: var(--space-2); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm);">
+                    <span style="color: var(--color-success); font-weight: 700;">✓</span> Notice & Bulletin Authoring
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; padding: var(--space-2); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm);">
+                    <span style="color: var(--color-success); font-weight: 700;">✓</span> Event Hosting & Registrations
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; padding: var(--space-2); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm);">
+                    <span style="color: var(--color-success); font-weight: 700;">✓</span> PDF Attachment Uploads (10MB)
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; padding: var(--space-2); background: rgba(255,255,255,0.7); border-radius: var(--radius-sm);">
+                    <span style="color: var(--color-success); font-weight: 700;">✓</span> Exam & Hall Seating Distribution
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+  </div>
+
+  <!-- Create / Edit Notice Modal -->
+  <div id="editModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: var(--space-4);">
+    <div class="glass-panel" style="background: #FFFFFF; max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; padding: var(--space-8);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+        <h2 id="modalFormTitle" style="margin: 0; color: var(--color-primary); font-size: var(--font-size-xl); font-weight: 700;">
+          Create New Notice
+        </h2>
+        <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+      </div>
+
+      <form id="noticeForm" onsubmit="handleSaveNotice(event)">
+        <input type="hidden" id="editNoticeId">
+
+        <div style="margin-bottom: var(--space-4);">
+          <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+            Notice Title *
+          </label>
+          <input type="text" id="noticeTitle" class="glass-input" placeholder="e.g., End-Semester Examination Schedule" required>
+        </div>
+
+        <div style="margin-bottom: var(--space-4);">
+          <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+            Detailed Notice Content *
+          </label>
+          <textarea id="noticeDesc" class="glass-input" rows="4" placeholder="Enter complete bulletin details, room allocations, rules..." required style="resize: vertical;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+          <div>
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Category
+            </label>
+            <select id="noticeCategory" class="glass-input">
+              <option value="notice">Notice</option>
+              <option value="hall_allocation">Hall Allocation (PDF)</option>
+              <option value="event">Event</option>
+              <option value="deadline">Academic Deadline</option>
+              <option value="other">Other Information</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Department
+            </label>
+            <input type="text" id="noticeDept" class="glass-input" placeholder="e.g., Examination Cell, CS Dept">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+          <div>
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Semester / Target Audience
+            </label>
+            <input type="text" id="noticeSemester" class="glass-input" placeholder="e.g., All Semesters, Sem 4 CS">
+          </div>
+          <div>
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Priority
+            </label>
+            <select id="noticePriority" class="glass-input">
+              <option value="normal">Normal</option>
+              <option value="important">Important</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+          <div>
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Deadline Date (Optional)
+            </label>
+            <input type="date" id="noticeDeadline" class="glass-input">
+          </div>
+          <div>
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Expiry Date (Optional)
+            </label>
+            <input type="date" id="noticeExpiry" class="glass-input">
+          </div>
+        </div>
+
+        <!-- PDF Upload -->
+        <div style="margin-bottom: var(--space-4);">
+          <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+            PDF Attachment (Max 10MB)
+          </label>
+          <input type="file" id="noticeFile" class="glass-input" accept=".pdf,image/png,image/jpeg">
+          <div id="uploadFeedback" style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 4px;"></div>
+        </div>
+
+        <div style="margin-bottom: var(--space-6);">
+          <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: var(--font-size-sm); cursor: pointer;">
+            <input type="checkbox" id="noticePinned">
+            <strong>Pin to top of bulletin board</strong>
+          </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-3); border-top: 1px solid var(--color-divider); padding-top: var(--space-4);">
+          <button type="button" onclick="closeModal()" class="btn-outline">Cancel</button>
+          <button type="submit" name="action" value="draft" class="btn-outline">Save Draft</button>
+          <button type="submit" name="action" value="published" class="btn-primary">Publish Now</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/firebase-config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/db.js"></script>
+  <script>
+    // Guard: Only staff or admin can access staff manager
+    CampusConnectAuth.requireRole(["staff", "admin"]);
+
+    const currentUser = CampusConnectAuth.getCurrentUser() || { displayName: "Dr. Robert Vance", username: "staff", role: "staff", department: "Computer Science" };
+    const sName = currentUser.displayName || currentUser.username || "Staff";
+    const userDisplay = document.getElementById("userNameDisplay");
+    if (userDisplay) userDisplay.textContent = sName;
+    const deptDisplay = document.getElementById("userDeptDisplay");
+    if (deptDisplay) deptDisplay.textContent = `${(currentUser.role || 'staff').toUpperCase()} • ${currentUser.department || "General"}`;
+    const avatar = document.getElementById("avatarLetter");
+    if (avatar) avatar.textContent = sName.charAt(0).toUpperCase();
+
+    let notices = [];
+    let statusFilter = "all";
+    let currentStaffTab = "notices";
+
+    async function init() {
+      CampusConnectDB.subscribeNotices((data) => {
+        notices = data || [];
+        updateStats();
+        renderTable();
+        renderStaffProfile();
+      });
+    }
+
+    function updateStats() {
+      document.getElementById("statTotal").textContent = notices.length;
+      document.getElementById("statPublished").textContent = notices.filter(n => n.status === "published").length;
+      document.getElementById("statDrafts").textContent = notices.filter(n => n.status === "draft").length;
+      document.getElementById("statFiles").textContent = notices.filter(n => n.attachmentUrl).length;
+    }
+
+    function setStatusFilter(filter) {
+      statusFilter = filter;
+      ["all", "published", "draft"].forEach(f => {
+        document.getElementById(`filter-${f}`).className = f === filter ? "btn-primary" : "btn-outline";
+      });
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("noticeTableBody");
+      const search = document.getElementById("tableSearch").value.toLowerCase().trim();
+
+      let filtered = notices.filter(n => {
+        if (statusFilter !== "all" && n.status !== statusFilter) return false;
+        if (search) {
+          const match = (n.title && n.title.toLowerCase().includes(search)) ||
+                        (n.department && n.department.toLowerCase().includes(search));
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">
+              No notices match the selected criteria.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(n => `
+        <tr>
+          <td>
+            <strong>${escapeHtml(n.title)}</strong>
+            ${n.isPinned ? '<span style="font-size: 11px; color: var(--color-accent); font-weight: 600;"> 📌 Pinned</span>' : ''}
+            ${n.attachmentName ? '<br><span style="font-size: 11px; color: var(--color-text-muted);">📄 ' + escapeHtml(n.attachmentName) + '</span>' : ''}
+          </td>
+          <td><span class="badge badge-notice">${n.category.replace('_', ' ')}</span></td>
+          <td>${escapeHtml(n.department || 'General')}</td>
+          <td>
+            <span style="font-size: var(--font-size-xs); font-weight: 600; text-transform: uppercase; color: ${n.priority === 'urgent' ? 'var(--color-danger)' : n.priority === 'important' ? 'var(--color-warning)' : 'var(--color-text-muted)'};">
+              ${n.priority}
+            </span>
+          </td>
+          <td>
+            <span style="display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; background: ${n.status === 'published' ? 'var(--color-success-bg)' : 'var(--color-warning-bg)'}; color: ${n.status === 'published' ? 'var(--color-success)' : 'var(--color-warning)'};">
+              ${n.status.toUpperCase()}
+            </span>
+          </td>
+          <td>${new Date(n.createdAt).toLocaleDateString()}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button onclick="editNotice('${n.id}')" class="btn-outline" style="padding: 2px 8px; font-size: 11px;">Edit</button>
+            <button onclick="togglePublish('${n.id}', '${n.status}')" class="btn-outline" style="padding: 2px 8px; font-size: 11px;">
+              ${n.status === 'published' ? 'Unpublish' : 'Publish'}
+            </button>
+            <button onclick="confirmDelete('${n.id}', '${escapeHtml(n.title).replace(/'/g, "\\'")}')" class="btn-outline" style="padding: 2px 8px; font-size: 11px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.3);">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openNoticeModal(notice = null) {
+      document.getElementById("editNoticeId").value = notice ? notice.id : "";
+      document.getElementById("modalFormTitle").textContent = notice ? "Edit Notice" : "Create New Notice";
+      document.getElementById("noticeTitle").value = notice ? notice.title : "";
+      document.getElementById("noticeDesc").value = notice ? notice.description : "";
+      document.getElementById("noticeCategory").value = notice ? notice.category : "notice";
+      document.getElementById("noticeDept").value = notice ? notice.department : (currentUser.department || "");
+      document.getElementById("noticeSemester").value = notice ? (notice.semester || "") : "All Semesters";
+      document.getElementById("noticePriority").value = notice ? notice.priority : "normal";
+      document.getElementById("noticeDeadline").value = notice ? (notice.deadline || "") : "";
+      document.getElementById("noticeExpiry").value = notice ? (notice.expiryDate || "") : "";
+      document.getElementById("noticePinned").checked = notice ? Boolean(notice.isPinned) : false;
+      document.getElementById("uploadFeedback").textContent = notice && notice.attachmentName ? `Current file: ${notice.attachmentName}` : "";
+
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("editModal").style.display = "none";
+      document.getElementById("noticeForm").reset();
+    }
+
+    function editNotice(id) {
+      const notice = notices.find(n => n.id === id);
+      if (notice) openNoticeModal(notice);
+    }
+
+    async function handleSaveNotice(e) {
+      e.preventDefault();
+      const submitter = e.submitter;
+      const targetStatus = submitter ? submitter.value : "published";
+
+      const id = document.getElementById("editNoticeId").value;
+      const fileInput = document.getElementById("noticeFile");
+
+      const payload = {
+        title: document.getElementById("noticeTitle").value,
+        description: document.getElementById("noticeDesc").value,
+        category: document.getElementById("noticeCategory").value,
+        department: document.getElementById("noticeDept").value,
+        semester: document.getElementById("noticeSemester").value,
+        priority: document.getElementById("noticePriority").value,
+        deadline: document.getElementById("noticeDeadline").value || null,
+        expiryDate: document.getElementById("noticeExpiry").value || null,
+        isPinned: document.getElementById("noticePinned").checked,
+        status: targetStatus
+      };
+
+      try {
+        // Upload attachment if provided
+        if (fileInput.files.length > 0) {
+          document.getElementById("uploadFeedback").textContent = "Uploading attachment to storage...";
+          const fileRes = await CampusConnectDB.uploadAttachment(fileInput.files[0]);
+          payload.attachmentName = fileRes.fileName;
+          payload.attachmentUrl = fileRes.fileUrl;
+          payload.attachmentSize = fileRes.fileSize;
+        }
+
+        if (id) {
+          await CampusConnectDB.updateNotice(id, payload);
+        } else {
+          await CampusConnectDB.createNotice(payload);
+        }
+
+        closeModal();
+      } catch (err) {
+        alert("Operation failed: " + err.message);
+      }
+    }
+
+    async function togglePublish(id, currentStatus) {
+      const newStatus = currentStatus === "published" ? "draft" : "published";
+      try {
+        await CampusConnectDB.updateNotice(id, { status: newStatus });
+      } catch (err) {
+        alert("Status update failed: " + err.message);
+      }
+    }
+
+    async function confirmDelete(id, title) {
+      if (confirm(`Are you sure you want to delete notice "${title}"? This action is permanent.`)) {
+        try {
+          await CampusConnectDB.deleteNotice(id);
+        } catch (err) {
+          alert("Deletion failed: " + err.message);
+        }
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function switchStaffTab(tab) {
+      currentStaffTab = tab;
+      const navNotices = document.getElementById("nav-notices");
+      const navProfile = document.getElementById("nav-profile");
+      const tabNotices = document.getElementById("tabStaffNotices");
+      const tabProfile = document.getElementById("tabStaffProfile");
+      const titleEl = document.getElementById("headerTitle");
+
+      if (tab === "profile") {
+        if (navNotices) navNotices.className = "";
+        if (navProfile) navProfile.className = "active";
+        if (tabNotices) tabNotices.style.display = "none";
+        if (tabProfile) tabProfile.style.display = "block";
+        if (titleEl) titleEl.textContent = "Faculty & Staff Profile";
+        renderStaffProfile();
+      } else {
+        if (navNotices) navNotices.className = "active";
+        if (navProfile) navProfile.className = "";
+        if (tabNotices) tabNotices.style.display = "block";
+        if (tabProfile) tabProfile.style.display = "none";
+        if (titleEl) titleEl.textContent = "Staff Notice Board Administration";
+        renderTable();
+      }
+    }
+
+    function renderStaffProfile() {
+      const user = CampusConnectAuth.getCurrentUser() || currentUser;
+      const uName = user.displayName || user.username || "Faculty Staff";
+      const avatarEl = document.getElementById("staffProfileAvatar");
+      if (avatarEl) avatarEl.textContent = uName.charAt(0).toUpperCase();
+      const nameEl = document.getElementById("staffProfileName");
+      if (nameEl) nameEl.textContent = uName;
+      const roleEl = document.getElementById("staffProfileRole");
+      if (roleEl) roleEl.textContent = (user.role || 'staff').toUpperCase() + ' • ' + (user.department || 'General');
+      const uEl = document.getElementById("staffProfileUsername");
+      if (uEl) uEl.textContent = '@' + (user.username || 'staff');
+      const emailEl = document.getElementById("staffProfileEmail");
+      if (emailEl) emailEl.textContent = user.email || 'staff@campusconnect.edu';
+      const deptEl = document.getElementById("staffProfileDept");
+      if (deptEl) deptEl.textContent = user.department || 'General';
+
+      // Match authored notices by authorUid, authorName, or department
+      const myNotices = (notices || []).filter(n => 
+        n.authorUid === user.uid || 
+        n.authorName === user.displayName || 
+        user.role === 'admin' || 
+        (user.department && n.department === user.department)
+      );
+      const myEvents = myNotices.filter(n => n.category === 'event');
+      const myAttachments = myNotices.filter(n => n.attachmentUrl);
+
+      const countNoticesEl = document.getElementById("staffCountNotices");
+      if (countNoticesEl) countNoticesEl.textContent = myNotices.length;
+      const countEventsEl = document.getElementById("staffCountEvents");
+      if (countEventsEl) countEventsEl.textContent = myEvents.length;
+      const countAttachEl = document.getElementById("staffCountAttachments");
+      if (countAttachEl) countAttachEl.textContent = myAttachments.length;
+
+      const authoredList = document.getElementById("staffAuthoredList");
+      if (!authoredList) return;
+
+      if (myNotices.length === 0) {
+        authoredList.innerHTML = `<p style="font-size: var(--font-size-xs); color: var(--color-text-muted); padding: var(--space-4); text-align: center;">You have not authored any bulletins yet. Click "+ Create New" to publish an official notice or event.</p>`;
+        return;
+      }
+
+      authoredList.innerHTML = myNotices.map(n => {
+        const isLive = n.status === "published";
+        const cat = n.category || 'notice';
+        return `
+          <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3); flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <div style="display: flex; gap: var(--space-2); align-items: center; margin-bottom: 2px;">
+                <span class="badge ${cat === 'event' ? 'badge-event' : cat === 'hall_allocation' ? 'badge-hall' : 'badge-notice'}">${cat.replace('_', ' ')}</span>
+                <span class="badge ${isLive ? 'badge-published' : 'badge-draft'}">${n.status || 'published'}</span>
+                ${n.isPinned ? '<span style="font-size: 10px; color: var(--color-accent); font-weight: 700;">📌 Pinned</span>' : ''}
+              </div>
+              <div style="font-weight: 700; color: var(--color-primary); font-size: var(--font-size-sm);">${escapeHtml(n.title)}</div>
+              <div style="font-size: 11px; color: var(--color-text-muted);">
+                🏢 ${escapeHtml(n.department || 'General')} • 📅 ${new Date(n.createdAt || Date.now()).toLocaleDateString()}
+                ${n.deadline ? ` • ⏰ Deadline: <strong>${n.deadline}</strong>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: var(--space-2); align-items: center;">
+              <button onclick="togglePublish('${n.id}', '${n.status}')" class="btn-outline" style="font-size: 11px; padding: 3px 8px;">
+                ${isLive ? 'Unpublish' : 'Publish'}
+              </button>
+              <button onclick="openNoticeModal('${n.id}')" class="btn-outline" style="font-size: 11px; padding: 3px 8px;">
+                Edit
+              </button>
+              <button onclick="confirmDelete('${n.id}', '${escapeHtml(n.title)}')" class="btn-outline" style="font-size: 11px; padding: 3px 8px; color: var(--color-danger); border-color: var(--color-danger);">
+                Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>

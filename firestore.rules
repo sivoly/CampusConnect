@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+
+    function isAdmin() {
+      return isRole('admin');
+    }
+
+    function isStaff() {
+      return isRole('staff') || isRole('admin');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // USERS COLLECTION
+    // - Anyone authenticated can read user profiles (for display names)
+    // - Only the owner can create their initial profile (as student only)
+    // - Users CANNOT change their own role or status
+    // - Only Admin can change roles and account statuses
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      
+      allow create: if isOwner(userId) 
+        && request.resource.data.role == 'student'
+        && request.resource.data.status == 'active';
+        
+      allow update: if isAdmin() 
+        || (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.status == resource.data.status);
+        
+      allow delete: if isAdmin() && userId != request.auth.uid;
+    }
+
+    // NOTICES COLLECTION
+    // - Students & general public can read published, active notices
+    // - Staff and Admin can create, edit, and delete notices
+    // - Validates required fields: title, category, status
+    match /notices/{noticeId} {
+      allow read: if (resource.data.status == 'published') || isStaff();
+      
+      allow create: if isStaff()
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.category in ['notice', 'hall_allocation', 'event', 'deadline', 'other']
+        && request.resource.data.status in ['draft', 'published']
+        && request.resource.data.authorUid == request.auth.uid;
+        
+      allow update: if isStaff()
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0;
+        
+      allow delete: if isStaff();
+    }
+
+    // BOOKMARKS COLLECTION
+    // - Subcollection or keyed by {uid}_{noticeId}
+    // - Only the owner can read/write their bookmarks
+    match /bookmarks/{bookmarkId} {
+      allow read, write: if isAuthenticated() 
+        && (bookmarkId.matches(request.auth.uid + '.*') || resource.data.uid == request.auth.uid || request.resource.data.uid == request.auth.uid);
+    }
+
+    // READ STATUS TRACKING
+    match /readStatus/{readId} {
+      allow read, write: if isAuthenticated()
+        && (readId.matches(request.auth.uid + '.*') || resource.data.uid == request.auth.uid || request.resource.data.uid == request.auth.uid);
+    }
+
+    // AUDIT LOGS COLLECTION
+    // - Immutable append-only logs created by staff & admin
+    // - Read restricted to Admin only
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isStaff();
+      allow update, delete: if false; // strictly immutable
+    }
+
+    // SYSTEM SETTINGS
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

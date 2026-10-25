@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: campusconnect_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: campus_user
+      POSTGRES_PASSWORD: campus_password
+      POSTGRES_DB: campusconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campus_user -d campusconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Optional local SMTP trap for testing email password reset flow
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: campusconnect_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI to view emails
+
+volumes:
+  postgres_data:

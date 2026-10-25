@@ -1,0 +1,62 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 900 >>
+stream
+BT
+/F1 18 Tf
+50 720 Td
+(CampusConnect - Autumn 2026 Examination Schedule) Tj
+/F1 12 Tf
+0 -30 Td
+(Office of the Controller of Examinations) Tj
+0 -18 Td
+(Published: October 2026 | Priority: Urgent) Tj
+0 -18 Td
+(----------------------------------------------------------------) Tj
+0 -18 Td
+(Branch: Computer Science & Engineering \(Sem 5 & 7\)) Tj
+0 -18 Td
+(  - CS501 Advanced Database Systems: Nov 18, 2026 \(09:30 - 12:30\)) Tj
+0 -18 Td
+(  - CS502 Network Security & Cryptography: Nov 21, 2026 \(09:30 - 12:30\)) Tj
+0 -18 Td
+(  - CS503 Distributed Cloud Architectures: Nov 24, 2026 \(09:30 - 12:30\)) Tj
+0 -18 Td
+() Tj
+0 -18 Td
+(Instructions for Candidates:) Tj
+0 -18 Td
+(  1. Hall tickets must be verified with college seal 48h prior.) Tj
+0 -18 Td
+(  2. Entry closes 15 minutes before exam commencement.) Tj
+0 -18 Td
+(  3. Programmable calculators and cellular devices are prohibited.) Tj
+0 -18 Td
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001192 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1262
+%%EOF

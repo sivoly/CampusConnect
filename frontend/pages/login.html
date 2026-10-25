@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Portal - CampusConnect</title>
+  <meta name="description" content="Sign in or create your own CampusConnect college notice board account.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/glass.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+    .login-card {
+      width: 100%;
+      max-width: 480px;
+      padding: var(--space-8);
+      border-radius: var(--radius-lg);
+    }
+    .auth-tabs {
+      display: flex;
+      background: rgba(22, 58, 99, 0.06);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: var(--space-6);
+      border: 1px solid var(--color-border);
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-weight: 600;
+      font-size: var(--font-size-sm);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+    .auth-tab-btn.active {
+      background: #FFFFFF;
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    .password-toggle-wrapper {
+      position: relative;
+    }
+    .toggle-password-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      padding: 4px;
+    }
+    .toggle-password-btn:hover {
+      color: var(--color-primary);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    @media (max-width: 480px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="glass-body">
+  <div class="login-container">
+    <div class="glass-panel login-card">
+      
+      <!-- Brand Header -->
+      <div style="text-align: center; margin-bottom: var(--space-5);">
+        <div class="brand-logo" style="margin: 0 auto var(--space-3); width: 48px; height: 48px; font-size: 1.4rem;">CC</div>
+        <h2 style="margin: 0; font-size: var(--font-size-2xl); color: var(--color-primary); font-weight: 700;">CampusConnect</h2>
+        <p style="margin: 0.35rem 0 0; color: var(--color-text-muted); font-size: var(--font-size-sm);" id="portalSubtitle">Sign in or create your student/staff account</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')" role="tab" aria-selected="true">
+          Sign In
+        </button>
+        <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')" role="tab" aria-selected="false">
+          Create Account (Sign Up)
+        </button>
+      </div>
+
+      <!-- Alert / Status message -->
+      <div id="authAlert" style="display: none; padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--font-size-sm); margin-bottom: var(--space-4);"></div>
+
+      <!-- ================= 1. SIGN IN FORM ================= -->
+      <form id="loginForm" method="POST" action="/api/auth/login">
+        
+        <div style="margin-bottom: var(--space-4);">
+          <label for="loginIdentifier" style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+            Username or Email
+          </label>
+          <input type="text" id="loginIdentifier" name="identifier" class="glass-input" placeholder="Enter your username or email" required autocomplete="username">
+        </div>
+
+        <div style="margin-bottom: var(--space-4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label for="loginPassword" style="font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-main);">
+              Password
+            </label>
+            <a href="/forgot-password" style="font-size: var(--font-size-xs); color: var(--color-accent); font-weight: 600; text-decoration: none;">
+              Forgot Password?
+            </a>
+          </div>
+          <div class="password-toggle-wrapper">
+            <input type="password" id="loginPassword" name="password" class="glass-input" placeholder="Enter your password" required autocomplete="current-password" style="padding-right: 60px;">
+            <button type="button" class="toggle-password-btn" id="toggleLoginPwd" aria-label="Show password">SHOW</button>
+          </div>
+        </div>
+
+        <button type="submit" id="loginSubmitBtn" class="btn-primary" style="width: 100%; padding: 0.75rem; margin-top: var(--space-2); font-size: var(--font-size-base);">
+          Sign In
+        </button>
+
+      </form>
+
+      <!-- ================= 2. SIGN UP FORM ================= -->
+      <form id="registerForm" style="display: none;">
+        
+        <div class="form-row" style="margin-bottom: var(--space-3);">
+          <div>
+            <label for="regFullName" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Full Name *
+            </label>
+            <input type="text" id="regFullName" class="glass-input" placeholder="e.g. Alex Morgan" required autocomplete="name">
+          </div>
+          <div>
+            <label for="regUsername" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Username *
+            </label>
+            <input type="text" id="regUsername" class="glass-input" placeholder="e.g. alex2026" required autocomplete="username">
+          </div>
+        </div>
+
+        <div style="margin-bottom: var(--space-3);">
+          <label for="regEmail" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+            Campus / Personal Email *
+          </label>
+          <input type="email" id="regEmail" class="glass-input" placeholder="e.g. alex@university.edu" required autocomplete="email">
+        </div>
+
+        <div class="form-row" style="margin-bottom: var(--space-3);">
+          <div>
+            <label for="regRole" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Account Type *
+            </label>
+            <select id="regRole" class="glass-input" style="padding: 0.55rem;">
+              <option value="student">🎓 Student</option>
+              <option value="staff">👨‍🏫 Faculty / Staff</option>
+            </select>
+          </div>
+          <div>
+            <label for="regDepartment" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Department *
+            </label>
+            <select id="regDepartment" class="glass-input" style="padding: 0.55rem;">
+              <option value="Computer Science">Computer Science</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Electronics & Communication">Electronics & Communication</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Business Administration">Business Administration</option>
+              <option value="General Academics">General Academics</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: var(--space-4);">
+          <div>
+            <label for="regPassword" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Choose Password *
+            </label>
+            <div class="password-toggle-wrapper">
+              <input type="password" id="regPassword" class="glass-input" placeholder="Min. 4 characters" required autocomplete="new-password" style="padding-right: 50px;">
+              <button type="button" class="toggle-password-btn" id="toggleRegPwd" aria-label="Show password">SHOW</button>
+            </div>
+          </div>
+          <div>
+            <label for="regConfirmPassword" style="display: block; font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 0.35rem; color: var(--color-text-main);">
+              Confirm Password *
+            </label>
+            <input type="password" id="regConfirmPassword" class="glass-input" placeholder="Repeat password" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <button type="submit" id="regSubmitBtn" class="btn-primary" style="width: 100%; padding: 0.75rem; margin-top: var(--space-2); font-size: var(--font-size-base);">
+          Create Account & Log In
+        </button>
+
+      </form>
+
+      <!-- Optional Demo Helpers (Accordion / Collapsible) -->
+      <details style="margin-top: var(--space-6); background: rgba(22, 58, 99, 0.03); border-radius: var(--radius-md); border: 1px dashed var(--color-border); padding: var(--space-2) var(--space-3);">
+        <summary style="font-size: 11px; font-weight: 600; color: var(--color-text-muted); cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;">
+          Need a quick test? View Demo Credentials
+        </summary>
+        <div style="margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--color-divider); text-align: center;">
+          <p style="font-size: 11px; color: var(--color-text-muted); margin: 0 0 var(--space-2);">Clicking a role will populate the Sign In form:</p>
+          <div style="display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="fillCredentials('student', 'student123')" class="btn-outline" style="padding: 3px 8px; font-size: 11px;">
+              🎓 Student
+            </button>
+            <button type="button" onclick="fillCredentials('staff', 'staff123')" class="btn-outline" style="padding: 3px 8px; font-size: 11px;">
+              👨‍🏫 Staff
+            </button>
+            <button type="button" onclick="fillCredentials('admin', 'admin123')" class="btn-outline" style="padding: 3px 8px; font-size: 11px;">
+              🛡 Admin
+            </button>
+          </div>
+        </div>
+      </details>
+
+      <!-- Return link -->
+      <div style="text-align: center; margin-top: var(--space-6); border-top: 1px solid var(--color-divider); padding-top: var(--space-4);">
+        <a href="/" style="font-size: var(--font-size-sm); color: var(--color-text-muted); text-decoration: none; font-weight: 500;">
+          &larr; Back to Public Notice Board
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/firebase-config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/db.js"></script>
+  <script>
+    const alertBox = document.getElementById('authAlert');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const tabBtnLogin = document.getElementById('tabBtnLogin');
+    const tabBtnRegister = document.getElementById('tabBtnRegister');
+    const subtitle = document.getElementById('portalSubtitle');
+
+    // Switch between Sign In and Sign Up tabs
+    function switchAuthTab(tab) {
+      alertBox.style.display = 'none';
+      if (tab === 'register') {
+        tabBtnLogin.classList.remove('active');
+        tabBtnLogin.setAttribute('aria-selected', 'false');
+        tabBtnRegister.classList.add('active');
+        tabBtnRegister.setAttribute('aria-selected', 'true');
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        subtitle.textContent = 'Create your personalized student or staff account';
+      } else {
+        tabBtnRegister.classList.remove('active');
+        tabBtnRegister.setAttribute('aria-selected', 'false');
+        tabBtnLogin.classList.add('active');
+        tabBtnLogin.setAttribute('aria-selected', 'true');
+        registerForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        subtitle.textContent = 'Sign in with your username and password';
+      }
+    }
+
+    // Check URL query parameters for default tab (?tab=signup)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'signup' || urlParams.get('tab') === 'register') {
+      switchAuthTab('register');
+    }
+
+    // Toggle password helpers
+    function setupPasswordToggle(btnId, inputId) {
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      if (!btn || !input) return;
+      btn.addEventListener('click', function() {
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.textContent = 'HIDE';
+        } else {
+          input.type = 'password';
+          btn.textContent = 'SHOW';
+        }
+      });
+    }
+    setupPasswordToggle('toggleLoginPwd', 'loginPassword');
+    setupPasswordToggle('toggleRegPwd', 'regPassword');
+
+    // Optional fill credentials helper
+    function fillCredentials(id, pwd) {
+      switchAuthTab('login');
+      document.getElementById('loginIdentifier').value = id;
+      document.getElementById('loginPassword').value = pwd;
+    }
+
+    // Handle Sign In submission
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      alertBox.style.display = 'none';
+      const id = document.getElementById('loginIdentifier').value.trim();
+      const pwd = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginSubmitBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Verifying credentials...';
+
+      try {
+        const user = await CampusConnectAuth.login(id, pwd);
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--color-success-bg)';
+        alertBox.style.color = 'var(--color-success)';
+        alertBox.textContent = `Welcome back, ${user.displayName}! Redirecting to ${user.role} dashboard...`;
+
+        setTimeout(() => {
+          const redirect = urlParams.get('redirect') || CampusConnectAuth.getDashboardUrl(user.role);
+          window.location.href = redirect;
+        }, 600);
+      } catch (err) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--color-danger-bg)';
+        alertBox.style.color = 'var(--color-danger)';
+        alertBox.textContent = err.message || 'Authentication failed.';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+
+    // Handle Sign Up submission
+    registerForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      alertBox.style.display = 'none';
+
+      const fullName = document.getElementById('regFullName').value.trim();
+      const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const role = document.getElementById('regRole').value;
+      const department = document.getElementById('regDepartment').value;
+      const password = document.getElementById('regPassword').value;
+      const confirmPassword = document.getElementById('regConfirmPassword').value;
+      const btn = document.getElementById('regSubmitBtn');
+
+      if (password !== confirmPassword) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--color-danger-bg)';
+        alertBox.style.color = 'var(--color-danger)';
+        alertBox.textContent = 'Passwords do not match. Please retype carefully.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating your account...';
+
+      try {
+        const user = await CampusConnectAuth.register({
+          displayName: fullName,
+          username: username,
+          email: email,
+          password: password,
+          role: role,
+          department: department
+        });
+
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--color-success-bg)';
+        alertBox.style.color = 'var(--color-success)';
+        alertBox.textContent = `Account created successfully! Welcome, ${user.displayName}! Redirecting...`;
+
+        setTimeout(() => {
+          window.location.href = CampusConnectAuth.getDashboardUrl(user.role);
+        }, 700);
+      } catch (err) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'var(--color-danger-bg)';
+        alertBox.style.color = 'var(--color-danger)';
+        alertBox.textContent = err.message || 'Registration failed.';
+        btn.disabled = false;
+        btn.textContent = 'Create Account & Log In';
+      }
+    });
+  </script>
+</body>
+</html>

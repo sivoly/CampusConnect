@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusConnect - Secure Digital College Notice Board</title>
+  <meta name="description" content="CampusConnect is the verified digital notice board for official college announcements, hall allocations, and events.">
+  
+  <!-- Modern Inter Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/glass.css">
+  <link rel="stylesheet" href="/css/layout.css">
+
+  <!-- Immediate Authentication Gate: First navigate to signin page -->
+  <script src="/js/firebase-config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    if (!window.CampusConnectAuth.isAuthenticated()) {
+      window.location.replace('/login');
+    } else {
+      const user = window.CampusConnectAuth.getCurrentUser();
+      window.location.replace(window.CampusConnectAuth.getDashboardUrl(user.role));
+    }
+  </script>
+</head>
+<body class="glass-body">
+  <div class="app-container">
+    
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar glass-sidebar">
+      <div class="brand-section">
+        <div class="brand-logo">CC</div>
+        <div class="brand-text">
+          <h1>CampusConnect</h1>
+          <p>Official Notice Board</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu" aria-label="Main Navigation">
+        <li class="nav-item">
+          <a href="/" class="active" id="nav-all">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg>
+            <span>All Updates</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#notices" id="nav-notices">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span>Notices</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#hall_allocation" id="nav-hall">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Hall Allocation</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#events" id="nav-events">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Events</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#other" id="nav-other">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Other Info</span>
+          </a>
+        </li>
+      </nav>
+
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      
+      <!-- Top Bar with Search & Quick Actions -->
+      <header class="top-bar glass-header">
+        <div class="search-container">
+          <input type="text" id="searchInput" class="glass-input" placeholder="Search notices, exams, venues..." aria-label="Search notices">
+        </div>
+        <div style="display: flex; gap: var(--space-2); align-items: center;">
+          <a href="/login?tab=signup" class="btn-outline" style="font-size: var(--font-size-xs); padding: 0.4rem 0.85rem; background: rgba(255, 255, 255, 0.85);">Sign Up</a>
+          <a href="/login" class="btn-primary" id="btn-login-header" style="font-size: var(--font-size-xs); padding: 0.4rem 0.85rem;">Sign In</a>
+        </div>
+      </header>
+
+      <!-- Main Body -->
+      <section class="content-body">
+
+
+        <!-- Filter Badges / Tabs -->
+        <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-6); overflow-x: auto; padding-bottom: 4px;">
+          <button class="btn-primary" style="padding: 0.4rem 1rem; font-size: var(--font-size-xs);" onclick="filterCategory('all')">All Updates</button>
+          <button class="btn-outline" style="padding: 0.4rem 1rem; font-size: var(--font-size-xs);" onclick="filterCategory('notice')">Notices</button>
+          <button class="btn-outline" style="padding: 0.4rem 1rem; font-size: var(--font-size-xs);" onclick="filterCategory('hall_allocation')">Hall Allocations</button>
+          <button class="btn-outline" style="padding: 0.4rem 1rem; font-size: var(--font-size-xs);" onclick="filterCategory('event')">Events</button>
+          <button class="btn-outline" style="padding: 0.4rem 1rem; font-size: var(--font-size-xs);" onclick="filterCategory('other')">Other Info</button>
+        </div>
+
+        <!-- Notice Board Cards Grid -->
+        <div class="notice-grid" id="noticeGrid">
+          
+          <!-- Sample Item 1: Notice -->
+          <article class="glass-card" data-category="notice">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+              <span class="badge badge-notice">Notice</span>
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-light);">Today, 10:30 AM</span>
+            </div>
+            <h3 style="margin: 0 0 0.5rem; font-size: var(--font-size-lg); color: var(--color-primary); font-weight: 600;">
+              End Semester Examination Schedule Released
+            </h3>
+            <p style="margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: 1.5;">
+              The comprehensive timetable for all 3rd and 5th-semester undergraduate and postgraduate programs is now officially published.
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-divider); padding-top: var(--space-3);">
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-muted);">Published by: Academic Dean</span>
+              <a href="#" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary); text-decoration: none;">View Notice &rarr;</a>
+            </div>
+          </article>
+
+          <!-- Sample Item 2: Hall Allocation -->
+          <article class="glass-card" data-category="hall_allocation">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+              <span class="badge badge-hall">Hall Allocation</span>
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-light);">Yesterday</span>
+            </div>
+            <h3 style="margin: 0 0 0.5rem; font-size: var(--font-size-lg); color: var(--color-primary); font-weight: 600;">
+              Mid-Term Hall & Seating Chart: Block C & D
+            </h3>
+            <p style="margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: 1.5;">
+              Semester 4 Computer Science and Mechanical Engineering seating plans for the upcoming mid-term examinations.
+            </p>
+            <div style="background: rgba(157, 23, 77, 0.05); border: 1px dashed rgba(157, 23, 77, 0.2); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3); display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.1rem;">📄</span>
+              <span style="font-size: var(--font-size-xs); font-weight: 600; color: var(--badge-hall-text);">Seating_Chart_Block_CD.pdf (1.4 MB)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-divider); padding-top: var(--space-3);">
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-muted);">Exam Date: Nov 2, 2026</span>
+              <a href="#" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--badge-hall-text); text-decoration: none;">Download PDF &rarr;</a>
+            </div>
+          </article>
+
+          <!-- Sample Item 3: Event -->
+          <article class="glass-card" data-category="event">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+              <span class="badge badge-event">Event</span>
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-light);">Upcoming</span>
+            </div>
+            <h3 style="margin: 0 0 0.5rem; font-size: var(--font-size-lg); color: var(--color-primary); font-weight: 600;">
+              Annual Tech Symposium: HackConnect 2026
+            </h3>
+            <p style="margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: 1.5;">
+              Join 500+ student innovators for a 36-hour hackathon, workshops on generative AI, and keynote lectures by industry leaders.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-muted);">
+              <div>📍 <strong>Venue:</strong> University Main Auditorium</div>
+              <div>📅 <strong>Date:</strong> Nov 15 - 16, 2026</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-divider); padding-top: var(--space-3);">
+              <span style="font-size: var(--font-size-xs); color: var(--color-accent); font-weight: 600;">Registrations Open</span>
+              <a href="#" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary); text-decoration: none;">Details &rarr;</a>
+            </div>
+          </article>
+
+          <!-- Sample Item 4: Other Info -->
+          <article class="glass-card" data-category="other">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+              <span class="badge badge-other">Other Information</span>
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-light);">General</span>
+            </div>
+            <h3 style="margin: 0 0 0.5rem; font-size: var(--font-size-lg); color: var(--color-primary); font-weight: 600;">
+              Central Library Extended Hours During Exams
+            </h3>
+            <p style="margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: 1.5;">
+              The digital reference library and 2nd-floor study rooms will remain accessible 24/7 beginning next Monday.
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-divider); padding-top: var(--space-3);">
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-muted);">Campus Facilities</span>
+              <a href="#" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary); text-decoration: none;">Read More &rarr;</a>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile Navigation">
+      <a href="/" class="active">
+        <span>🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="#notices">
+        <span>📢</span>
+        <span>Notices</span>
+      </a>
+      <a href="#hall_allocation">
+        <span>📋</span>
+        <span>Halls</span>
+      </a>
+      <a href="#events">
+        <span>🎉</span>
+        <span>Events</span>
+      </a>
+      <a href="/login">
+        <span>🔒</span>
+        <span>Login</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/firebase-config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/db.js"></script>
+  <script>
+    let activeNotices = [];
+    let activeCategory = "all";
+
+    async function quickLaunch(role) {
+      const creds = {
+        student: ["student", "student123"],
+        staff: ["staff", "staff123"],
+        admin: ["admin", "admin123"]
+      };
+      try {
+        const [u, p] = creds[role] || ["student", "student123"];
+        await CampusConnectAuth.login(u, p);
+        window.location.href = CampusConnectAuth.getDashboardUrl(role);
+      } catch (err) {
+        window.location.href = `/login`;
+      }
+    }
+
+    // Update login status panel in sidebar
+    const user = CampusConnectAuth.getCurrentUser();
+    if (user) {
+      document.querySelector('.user-profile-panel .name').textContent = user.displayName;
+      document.querySelector('.user-profile-panel .role').innerHTML = `<a href="${CampusConnectAuth.getDashboardUrl(user.role)}" style="color: var(--color-accent); font-weight: 600; text-decoration: none;">Go to Dashboard &rarr;</a>`;
+      const btnHeader = document.getElementById("btn-login-header");
+      if (btnHeader) {
+        btnHeader.textContent = "My Dashboard";
+        btnHeader.href = CampusConnectAuth.getDashboardUrl(user.role);
+      }
+    }
+
+    // Subscribe to real-time published notices from Firestore
+    CampusConnectDB.subscribeNotices((all) => {
+      activeNotices = all.filter(n => n.status === "published");
+      renderNotices();
+    });
+
+    function filterCategory(cat) {
+      activeCategory = cat;
+      renderNotices();
+    }
+
+    function renderNotices() {
+      const grid = document.getElementById("noticeGrid");
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      const filtered = activeNotices.filter(n => {
+        if (activeCategory !== "all" && n.category !== activeCategory) return false;
+        if (query) {
+          const match = (n.title && n.title.toLowerCase().includes(query)) ||
+                        (n.description && n.description.toLowerCase().includes(query)) ||
+                        (n.department && n.department.toLowerCase().includes(query));
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="glass-panel" style="grid-column: 1 / -1; text-align: center; padding: var(--space-8); color: var(--color-text-muted);">
+            <h3>No notices found</h3>
+            <p style="font-size: var(--font-size-sm);">There are currently no published bulletins matching this filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(n => {
+        let catBadgeClass = "badge-notice";
+        if (n.category === "hall_allocation") catBadgeClass = "badge-hall";
+        if (n.category === "event") catBadgeClass = "badge-event";
+        if (n.category === "other") catBadgeClass = "badge-other";
+
+        const dateStr = new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+        return `
+          <article class="glass-card" data-category="${n.category}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+              <span class="badge ${catBadgeClass}">${n.category.replace('_', ' ')}</span>
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-light);">${dateStr}</span>
+            </div>
+            <h3 style="margin: 0 0 0.5rem; font-size: var(--font-size-lg); color: var(--color-primary); font-weight: 600;">
+              ${escapeHtml(n.title)}
+            </h3>
+            <p style="margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+              ${escapeHtml(n.description)}
+            </p>
+            ${n.attachmentName ? `
+              <div style="background: rgba(22, 58, 99, 0.05); border: 1px dashed rgba(22, 58, 99, 0.2); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                  <span>📄</span>
+                  <span style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(n.attachmentName)}</span>
+                </div>
+                ${n.attachmentUrl ? `<a href="${n.attachmentUrl}" target="_blank" style="font-size: 11px; font-weight: 600; color: var(--color-accent); text-decoration: none;">View</a>` : ''}
+              </div>
+            ` : ''}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-divider); padding-top: var(--space-3);">
+              <span style="font-size: var(--font-size-xs); color: var(--color-text-muted);">${escapeHtml(n.department || 'General')}</span>
+              <a href="/login" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary); text-decoration: none;">View Details &rarr;</a>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderNotices);
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

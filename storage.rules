@@ -1,0 +1,32 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['staff', 'admin'];
+    }
+
+    // Attachments uploaded for notices
+    // - Allowed types: PDF, PNG, JPEG, JPG
+    // - Size limit: 10MB
+    // - Read allowed to authenticated users
+    // - Create/Update/Delete allowed only to Staff & Admin
+    match /attachments/{allPaths=**} {
+      allow read: if isAuthenticated();
+      
+      allow create: if isStaff()
+        && request.resource.size < 10 * 1024 * 1024
+        && (request.resource.contentType.matches('application/pdf')
+            || request.resource.contentType.matches('image/png')
+            || request.resource.contentType.matches('image/jpeg')
+            || request.resource.contentType.matches('image/jpg'));
+            
+      allow delete: if isStaff();
+    }
+  }
+}

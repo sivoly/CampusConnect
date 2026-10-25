@@ -1,0 +1,65 @@
+{
+  "hosting": {
+    "public": "frontend",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/pages/index.html"
+      },
+      {
+        "source": "/login",
+        "destination": "/pages/login.html"
+      },
+      {
+        "source": "/forgot-password",
+        "destination": "/pages/forgot-password.html"
+      },
+      {
+        "source": "/student",
+        "destination": "/pages/student/index.html"
+      },
+      {
+        "source": "/student/**",
+        "destination": "/pages/student/index.html"
+      },
+      {
+        "source": "/staff",
+        "destination": "/pages/staff/index.html"
+      },
+      {
+        "source": "/staff/**",
+        "destination": "/pages/staff/index.html"
+      },
+      {
+        "source": "/admin",
+        "destination": "/pages/admin/index.html"
+      },
+      {
+        "source": "/admin/**",
+        "destination": "/pages/admin/index.html"
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal - CampusConnect</title>
+  <meta name="description" content="Personalized student notice board, examination hall seat allocations, and academic deadlines.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/glass.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <style>
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+    }
+    .deadline-card {
+      border-left: 4px solid var(--color-accent);
+      padding: var(--space-3) var(--space-4);
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: var(--space-2);
+      transition: all var(--transition-fast);
+    }
+    .deadline-card:hover {
+      background: #FFFFFF;
+      transform: translateX(4px);
+    }
+    .priority-urgent {
+      border-left: 4px solid var(--color-danger);
+    }
+    .priority-important {
+      border-left: 4px solid var(--color-warning);
+    }
+  </style>
+</head>
+<body class="glass-body">
+  <div class="app-container">
+    
+    <!-- Student Sidebar -->
+    <aside class="sidebar glass-sidebar">
+      <div class="brand-section">
+        <div class="brand-logo">CC</div>
+        <div class="brand-text">
+          <h1>CampusConnect</h1>
+          <p>Student Portal</p>
+        </div>
+      </div>
+
+      <ul class="nav-menu" role="list" aria-label="Student Navigation">
+        <li class="nav-item">
+          <a href="#feed" class="active" id="nav-dash" onclick="switchTab('feed'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Notice Feed</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#events" id="nav-events" onclick="switchTab('events'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span>My Events</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#bookmarks" id="nav-bookmarks" onclick="switchTab('bookmarks'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Bookmarked</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#deadlines" id="nav-deadlines" onclick="switchTab('deadlines'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Deadlines</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#profile" id="nav-profile" onclick="switchTab('profile'); return false;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>My Profile</span>
+          </a>
+        </li>
+      </ul>
+
+
+      <!-- Student Profile & Logout -->
+      <div class="user-profile-panel" style="margin-top: auto; cursor: pointer; transition: background var(--transition-fast);" onclick="switchTab('profile')" title="View My Student Profile">
+        <div class="user-avatar" id="avatarLetter">S</div>
+        <div class="user-meta">
+          <div class="name" id="userNameDisplay">Student Name</div>
+          <div class="role" id="userDeptDisplay">Student • IT Dept</div>
+        </div>
+        <button onclick="event.stopPropagation(); CampusConnectAuth.logout();" class="btn-outline" style="padding: 4px 8px; font-size: 11px;" title="Sign Out">
+          Exit
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      
+      <!-- Top Bar with Search & Live Indicator -->
+      <header class="top-bar glass-header">
+        <div class="search-container">
+          <input type="text" id="studentSearch" class="glass-input" placeholder="Search notices, exams, events..." aria-label="Search notices">
+        </div>
+        <div style="display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap;">
+          <span style="font-size: var(--font-size-xs); color: var(--color-success); background: var(--color-success-bg); padding: 0.35rem 0.65rem; border-radius: var(--radius-full); font-weight: 600;">
+            ● Live
+          </span>
+          <button onclick="switchTab('profile')" class="btn-outline" style="font-size: var(--font-size-xs); padding: 0.35rem 0.75rem;" title="View Student Profile">
+            👤 My Profile
+          </button>
+          <button onclick="CampusConnectAuth.logout()" class="btn-outline" style="font-size: var(--font-size-xs); padding: 0.35rem 0.65rem;">Sign Out</button>
+        </div>
+      </header>
+
+      <section class="content-body">
+        
+        <!-- Welcome Hero Banner -->
+        <div class="glass-panel" style="padding: var(--space-6) var(--space-8); margin-bottom: var(--space-6);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4);">
+            <div>
+              <h2 style="margin: 0; font-size: var(--font-size-2xl); color: var(--color-primary); font-weight: 700;">
+                Hello, <span id="welcomeName">Student</span> 👋
+              </h2>
+              <p style="margin: 0.35rem 0 0; color: var(--color-text-muted); font-size: var(--font-size-sm);">
+                Here are your verified college announcements and schedule updates.
+              </p>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+              <div class="stat-badge" style="background: rgba(22, 58, 99, 0.08); color: var(--color-primary);">
+                <span>📢</span> <span id="statActiveCount">0</span> Active Notices
+              </div>
+              <div class="stat-badge" style="background: var(--badge-event-bg); color: var(--badge-event-text);">
+                <span>⏳</span> <span id="statDeadlineCount">0</span> Deadlines
+              </div>
+              <div class="stat-badge" style="background: var(--badge-hall-bg); color: var(--badge-hall-text);">
+                <span>⭐</span> <span id="statBookmarkCount">0</span> Bookmarked
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tabFeed">
+        <div style="display: flex; gap: var(--space-8); flex-wrap: wrap;">
+          <!-- Left Feed: Notices (Main Column) -->
+          <div style="flex: 2; min-width: 320px;">
+            
+            <!-- Category Tabs & Filters -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+              <div style="display: flex; gap: var(--space-2); overflow-x: auto;">
+                <button class="btn-primary" id="cat-all" style="padding: 0.35rem 0.85rem; font-size: var(--font-size-xs);" onclick="setCategoryFilter('all')">All</button>
+                <button class="btn-outline" id="cat-notice" style="padding: 0.35rem 0.85rem; font-size: var(--font-size-xs);" onclick="setCategoryFilter('notice')">Notices</button>
+                <button class="btn-outline" id="cat-hall" style="padding: 0.35rem 0.85rem; font-size: var(--font-size-xs);" onclick="setCategoryFilter('hall_allocation')">Hall Allocations</button>
+                <button class="btn-outline" id="cat-event" style="padding: 0.35rem 0.85rem; font-size: var(--font-size-xs);" onclick="setCategoryFilter('event')">Events</button>
+                <button class="btn-outline" id="cat-other" style="padding: 0.35rem 0.85rem; font-size: var(--font-size-xs);" onclick="setCategoryFilter('other')">Other</button>
+              </div>
+
+              <!-- Sort Dropdown -->
+              <select id="sortSelect" onchange="renderFeed()" class="glass-input" style="width: auto; padding: 0.35rem 0.75rem; font-size: var(--font-size-xs);">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="deadline">Closest Deadline</option>
+              </select>
+            </div>
+
+            <!-- Feed Container -->
+            <div id="noticesContainer" style="display: flex; flex-direction: column; gap: var(--space-4);">
+              <div style="text-align: center; padding: var(--space-8); color: var(--color-text-muted);">
+                Loading official notices from Firestore...
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Sidebar: Upcoming Deadlines & Calendar (Secondary Column) -->
+          <div style="flex: 1; min-width: 280px;">
+            
+            <div class="glass-panel" style="padding: var(--space-5); margin-bottom: var(--space-6);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                <h3 style="margin: 0; font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">
+                  Upcoming Deadlines
+                </h3>
+                <span style="font-size: var(--font-size-xs); color: var(--color-accent); font-weight: 600;">Due Soon</span>
+              </div>
+              <div id="deadlinesList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Pinned & Urgent Notices Panel -->
+            <div class="glass-panel" style="padding: var(--space-5);">
+              <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">
+                📌 Priority Bulletins
+              </h3>
+              <div id="pinnedList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+        </div>
+
+        <!-- ============ MY EVENTS (RSVP) TAB ============ -->
+        <div id="tabEvents" style="display:none;">
+          <div class="glass-panel" style="padding: var(--space-5) var(--space-6); margin-bottom: var(--space-4);">
+            <h3 style="margin: 0 0 var(--space-1); font-size: var(--font-size-lg); color: var(--color-primary); font-weight: 700;">🎉 My Registered Events</h3>
+            <p style="margin: 0; font-size: var(--font-size-xs); color: var(--color-text-muted);">Events you have RSVP'd to. Click an event to view details.</p>
+          </div>
+          <div id="myEventsList" style="display: flex; flex-direction: column; gap: var(--space-3);">
+            <div style="text-align:center; padding: var(--space-8); color: var(--color-text-muted);">Loading your events...</div>
+          </div>
+        </div>
+
+        <!-- ============ MY PROFILE TAB ============ -->
+        <div id="tabProfile" style="display:none;">
+          <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; align-items: flex-start;">
+
+            <!-- Profile Card -->
+            <div class="glass-panel" style="padding: var(--space-6); min-width: 260px; flex: 1; max-width: 340px;">
+              <div style="text-align: center; margin-bottom: var(--space-5);">
+                <div id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: #fff; font-size: 2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-3);">S</div>
+                <div id="profileName" style="font-size: var(--font-size-xl); font-weight: 700; color: var(--color-primary);">Student Name</div>
+                <div id="profileRole" style="font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 2px;">STUDENT</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--font-size-sm);">
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Username</span>
+                  <span id="profileUsername" style="font-weight: 600; color: var(--color-primary);">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Email</span>
+                  <span id="profileEmail" style="font-weight: 600; color: var(--color-primary); font-size: 11px;">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider);">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Department</span>
+                  <span id="profileDept" style="font-weight: 600; color: var(--color-primary);">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: var(--space-2) 0;">
+                  <span style="color: var(--color-text-muted); font-weight: 500;">Role</span>
+                  <span id="profileRoleBadge" class="badge badge-other">STUDENT</span>
+                </div>
+              </div>
+              <button onclick="CampusConnectAuth.logout()" class="btn-outline" style="width: 100%; margin-top: var(--space-5); color: var(--color-danger); border-color: var(--color-danger);">
+                Sign Out
+              </button>
+            </div>
+
+            <!-- Activity Summary -->
+            <div style="flex: 2; min-width: 280px; display: flex; flex-direction: column; gap: var(--space-4);">
+              <div class="glass-panel" style="padding: var(--space-5);">
+                <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">📊 Activity Summary</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); text-align: center;">
+                  <div style="padding: var(--space-3); background: rgba(22,58,99,0.06); border-radius: var(--radius-md);">
+                    <div id="profileNoticeCount" style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-primary);">0</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">Notices Viewed</div>
+                  </div>
+                  <div style="padding: var(--space-3); background: rgba(0,168,150,0.08); border-radius: var(--radius-md);">
+                    <div id="profileEventCount" style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-accent);">0</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">Events Joined</div>
+                  </div>
+                  <div style="padding: var(--space-3); background: rgba(246,189,96,0.1); border-radius: var(--radius-md);">
+                    <div id="profileBookmarkCount" style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-warning);">0</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">Bookmarks</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Registered Events List in Profile -->
+              <div class="glass-panel" style="padding: var(--space-5);">
+                <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">🎉 Registered Events</h3>
+                <div id="profileEventsList">
+                  <p style="font-size: var(--font-size-xs); color: var(--color-text-muted);">Loading...</p>
+                </div>
+              </div>
+
+              <!-- Bookmarks Summary in Profile -->
+              <div class="glass-panel" style="padding: var(--space-5);">
+                <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-base); color: var(--color-primary); font-weight: 700;">⭐ Bookmarked Notices</h3>
+                <div id="profileBookmarksList">
+                  <p style="font-size: var(--font-size-xs); color: var(--color-text-muted);">Loading...</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+  </div>
+
+  <!-- Notice Detail Modal -->
+  <div id="noticeModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: var(--space-4);">
+    <div class="glass-panel" style="background: #FFFFFF; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; padding: var(--space-8);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+        <span id="modalCategoryBadge" class="badge badge-notice">Notice</span>
+        <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+      </div>
+      <h2 id="modalTitle" style="margin: 0 0 var(--space-3); color: var(--color-primary); font-size: var(--font-size-xl);"></h2>
+      <div style="display: flex; gap: var(--space-4); font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: var(--space-4); flex-wrap: wrap;">
+        <div>👤 <span id="modalAuthor">Author</span></div>
+        <div>🏢 <span id="modalDept">Department</span></div>
+        <div>📅 <span id="modalDate">Date</span></div>
+      </div>
+      <p id="modalDesc" style="color: var(--color-text-main); font-size: var(--font-size-sm); line-height: 1.6; white-space: pre-wrap; margin-bottom: var(--space-6);"></p>
+      
+      <!-- Attachment Section -->
+      <div id="modalAttachmentSection" style="display: none; margin-bottom: var(--space-6); padding: var(--space-3); background: rgba(22, 58, 99, 0.04); border-radius: var(--radius-md); border: 1px dashed var(--color-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>📄</span>
+            <span id="modalAttachmentName" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary);">file.pdf</span>
+          </div>
+          <a id="modalDownloadBtn" href="#" target="_blank" class="btn-primary" style="padding: 4px 10px; font-size: var(--font-size-xs);">Download / View</a>
+        </div>
+      </div>
+
+      <!-- Event RSVP Section -->
+      <div id="modalRsvpSection" style="display: none; margin-bottom: var(--space-6); padding: var(--space-4); background: rgba(0, 168, 150, 0.08); border-radius: var(--radius-md); border: 1px solid var(--color-accent);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-2);">
+          <div>
+            <div style="font-weight: 700; color: var(--color-primary); font-size: var(--font-size-sm);">Event Registration (RSVP)</div>
+            <div id="modalRsvpStatusText" style="font-size: var(--font-size-xs); color: var(--color-text-muted);">Reserve your seat for this event.</div>
+          </div>
+          <button id="modalRsvpBtn" class="btn-primary" style="font-size: var(--font-size-xs); padding: 6px 14px;">Register for Event</button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: var(--space-3);">
+        <button onclick="closeModal()" class="btn-outline">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/firebase-config.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/db.js"></script>
+  <script>
+    // Enforce student/staff/admin authentication
+    CampusConnectAuth.requireRole(["student", "staff", "admin"]);
+
+    const currentUser = CampusConnectAuth.getCurrentUser() || { displayName: "Student", username: "student", role: "student", department: "General", uid: "guest" };
+    const name = currentUser.displayName || currentUser.username || "Student";
+    const welcomeEl = document.getElementById("welcomeName");
+    if (welcomeEl) welcomeEl.textContent = name;
+    const userDisplayEl = document.getElementById("userNameDisplay");
+    if (userDisplayEl) userDisplayEl.textContent = name;
+    const deptEl = document.getElementById("userDeptDisplay");
+    if (deptEl) deptEl.textContent = `${(currentUser.role || 'student').toUpperCase()} • ${currentUser.department || "General"}`;
+    const avatarEl = document.getElementById("avatarLetter");
+    if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+
+    let allNotices = [];
+    let bookmarks = new Set();
+    let readNotices = new Set();
+    let myRegisteredEvents = [];
+    let currentCategory = "all";
+    let activeTab = "feed";
+
+    async function init() {
+      try {
+        // 1. Immediately subscribe to real-time notice updates
+        CampusConnectDB.subscribeNotices((notices) => {
+          allNotices = (notices || []).filter(n => !n.status || n.status === "published");
+          updateStats();
+          renderFeed();
+          renderDeadlines();
+          renderPinned();
+        });
+
+        // 2. Load user bookmarks, reads & registered events in background without blocking
+        if (currentUser && currentUser.uid) {
+          CampusConnectDB.getBookmarks(currentUser.uid)
+            .then(b => { bookmarks = new Set(b || []); updateStats(); renderFeed(); })
+            .catch(() => {});
+
+          CampusConnectDB.getReadNotices(currentUser.uid)
+            .then(r => { readNotices = new Set(r || []); renderFeed(); })
+            .catch(() => {});
+
+          CampusConnectDB.getRegisteredEvents(currentUser.uid)
+            .then(ev => { myRegisteredEvents = ev || []; renderFeed(); })
+            .catch(() => {});
+        }
+      } catch (err) {
+        console.error("Dashboard initialization error:", err);
+      }
+    }
+
+    function updateStats() {
+      const activeEl = document.getElementById("statActiveCount");
+      if (activeEl) activeEl.textContent = allNotices.length;
+      const bMarkEl = document.getElementById("statBookmarkCount");
+      if (bMarkEl) bMarkEl.textContent = bookmarks.size;
+      const deadlines = allNotices.filter(n => n.deadline && new Date(n.deadline) >= new Date().setHours(0,0,0,0));
+      const deadEl = document.getElementById("statDeadlineCount");
+      if (deadEl) deadEl.textContent = deadlines.length;
+    }
+
+    function setCategoryFilter(cat) {
+      currentCategory = cat;
+      const buttons = ["all", "notice", "hall", "event", "other"];
+      buttons.forEach(b => {
+        const btn = document.getElementById(`cat-${b}`);
+        if (btn) {
+          btn.className = (b === cat || (b === "hall" && cat === "hall_allocation")) ? "btn-primary" : "btn-outline";
+        }
+      });
+      renderFeed();
+    }
+
+    function renderFeed() {
+      const container = document.getElementById("noticesContainer");
+      if (!container) return;
+      const searchInput = document.getElementById("studentSearch");
+      const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
+      const sortSelect = document.getElementById("sortSelect");
+      const sortBy = sortSelect ? sortSelect.value : "newest";
+
+      let filtered = allNotices.filter(n => {
+        if (!n) return false;
+        if (activeTab === "bookmarks" && !bookmarks.has(n.id)) return false;
+        if (activeTab === "deadlines" && !n.deadline) return false;
+        const cat = (n.category || "notice").toLowerCase();
+        if (currentCategory !== "all" && cat !== currentCategory) return false;
+        if (searchTerm) {
+          const match = (n.title && n.title.toLowerCase().includes(searchTerm)) ||
+                        (n.description && n.description.toLowerCase().includes(searchTerm)) ||
+                        (n.department && n.department.toLowerCase().includes(searchTerm));
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      // Sorting
+      filtered.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+        if (sortBy === "oldest") return dateA - dateB;
+        if (sortBy === "deadline") {
+          if (!a.deadline) return 1;
+          if (!b.deadline) return -1;
+          return new Date(a.deadline) - new Date(b.deadline);
+        }
+        // Default: newest first (with pinned on top)
+        if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return b.isPinned ? 1 : -1;
+        return dateB - dateA;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="glass-panel" style="text-align: center; padding: var(--space-8); color: var(--color-text-muted);">
+            <div style="font-size: 2.5rem; margin-bottom: var(--space-2);">📋</div>
+            <h3>No notices found</h3>
+            <p style="font-size: var(--font-size-sm); margin-bottom: 0;">No notices match the selected category or search filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(notice => {
+        const isRead = readNotices.has(notice.id);
+        const isBookmarked = bookmarks.has(notice.id);
+        const isRegistered = myRegisteredEvents.some(e => e.noticeId === notice.id);
+        const dateStr = new Date(notice.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        let catBadgeClass = "badge-notice";
+        if (notice.category === "hall_allocation") catBadgeClass = "badge-hall";
+        if (notice.category === "event") catBadgeClass = "badge-event";
+        if (notice.category === "other") catBadgeClass = "badge-other";
+
+        return `
+          <article class="glass-card ${notice.priority === 'urgent' ? 'priority-urgent' : notice.priority === 'important' ? 'priority-important' : ''}" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2);">
+              <div style="display: flex; gap: var(--space-2); align-items: center;">
+                <span class="badge ${catBadgeClass}">${notice.category.replace('_', ' ')}</span>
+                ${notice.isPinned ? '<span style="font-size: var(--font-size-xs); color: var(--color-accent); font-weight: 600;">📌 Pinned</span>' : ''}
+                ${!isRead ? '<span style="width: 8px; height: 8px; background: var(--color-accent); border-radius: 50%;" title="Unread Notice"></span>' : ''}
+              </div>
+              <div style="display: flex; gap: var(--space-2); align-items: center;">
+                <span style="font-size: var(--font-size-xs); color: var(--color-text-light);">${dateStr}</span>
+                <button onclick="toggleBookmark('${notice.id}')" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; color: ${isBookmarked ? 'var(--color-accent)' : 'var(--color-text-light)'};" title="${isBookmarked ? 'Remove Bookmark' : 'Bookmark Notice'}">
+                  ${isBookmarked ? '★' : '☆'}
+                </button>
+              </div>
+            </div>
+
+            <h3 style="margin: 0 0 0.5rem; font-size: var(--font-size-lg); color: var(--color-primary); cursor: pointer;" onclick="openNoticeModal('${notice.id}')">
+              ${escapeHtml(notice.title)}
+            </h3>
+
+            <p style="margin: 0 0 var(--space-3); color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+              ${escapeHtml(notice.description)}
+            </p>
+
+            ${notice.attachmentName ? `
+              <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(22, 58, 99, 0.05); padding: 4px 10px; border-radius: var(--radius-sm); margin-bottom: var(--space-3); font-size: var(--font-size-xs); color: var(--color-primary); font-weight: 500;">
+                <span>📄</span> <span>${escapeHtml(notice.attachmentName)}</span>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-divider); padding-top: var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-muted); flex-wrap: wrap; gap: var(--space-2);">
+              <div>🏢 ${escapeHtml(notice.department || "General")} ${notice.deadline ? `• ⏰ Due: <strong>${notice.deadline}</strong>` : ''}</div>
+              <div style="display: flex; gap: var(--space-2); align-items: center;">
+                ${notice.category === 'event' ? (
+                  isRegistered ?
+                  `<button onclick="cancelMyEvent('${notice.id}')" class="btn-outline" style="padding: 4px 10px; font-size: var(--font-size-xs); color: var(--color-success); border-color: var(--color-success); font-weight: 600;" title="Click to cancel RSVP">✓ Registered</button>` :
+                  `<button onclick="registerEventFromFeed('${notice.id}')" class="btn-primary" style="padding: 4px 10px; font-size: var(--font-size-xs);">🎉 RSVP / Register</button>`
+                ) : ''}
+                <button onclick="openNoticeModal('${notice.id}')" class="btn-outline" style="padding: 4px 10px; font-size: var(--font-size-xs);">Read More &rarr;</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderDeadlines() {
+      const list = document.getElementById("deadlinesList");
+      const upcoming = allNotices
+        .filter(n => n.deadline && new Date(n.deadline) >= new Date().setHours(0,0,0,0))
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+        .slice(0, 5);
+
+      if (upcoming.length === 0) {
+        list.innerHTML = `<p style="font-size: var(--font-size-xs); color: var(--color-text-muted);">No upcoming deadlines.</p>`;
+        return;
+      }
+
+      list.innerHTML = upcoming.map(n => `
+        <div class="deadline-card" onclick="openNoticeModal('${n.id}')" style="cursor: pointer;">
+          <div style="font-size: var(--font-size-xs); color: var(--color-accent); font-weight: 700;">${n.deadline}</div>
+          <div style="font-size: var(--font-size-sm); font-weight: 600; color: var(--color-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${escapeHtml(n.title)}
+          </div>
+          <div style="font-size: 11px; color: var(--color-text-muted);">${escapeHtml(n.department)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderPinned() {
+      const list = document.getElementById("pinnedList");
+      const pinned = allNotices.filter(n => n.isPinned || n.priority === "urgent").slice(0, 4);
+
+      if (pinned.length === 0) {
+        list.innerHTML = `<p style="font-size: var(--font-size-xs); color: var(--color-text-muted);">No pinned bulletins.</p>`;
+        return;
+      }
+
+      list.innerHTML = pinned.map(n => `
+        <div style="padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider); cursor: pointer;" onclick="openNoticeModal('${n.id}')">
+          <div style="font-size: var(--font-size-xs); font-weight: 600; color: var(--color-primary);">${escapeHtml(n.title)}</div>
+          <div style="font-size: 11px; color: var(--color-text-muted);">${new Date(n.createdAt).toLocaleDateString()}</div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleBookmark(id) {
+      const isNowBookmarked = await CampusConnectDB.toggleBookmark(id);
+      if (isNowBookmarked) bookmarks.add(id);
+      else bookmarks.delete(id);
+      updateStats();
+      renderFeed();
+    }
+
+    async function openNoticeModal(id) {
+      const notice = allNotices.find(n => n.id === id);
+      if (!notice) return;
+
+      // Mark as read
+      await CampusConnectDB.markAsRead(id);
+      readNotices.add(id);
+
+      document.getElementById("modalTitle").textContent = notice.title;
+      document.getElementById("modalAuthor").textContent = notice.authorName || "Faculty";
+      document.getElementById("modalDept").textContent = notice.department || "General";
+      document.getElementById("modalDate").textContent = new Date(notice.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' });
+      document.getElementById("modalDesc").textContent = notice.description;
+      
+      const badge = document.getElementById("modalCategoryBadge");
+      badge.textContent = notice.category.replace('_', ' ');
+      badge.className = `badge badge-${notice.category === 'hall_allocation' ? 'hall' : notice.category === 'event' ? 'event' : 'notice'}`;
+
+      const attachSec = document.getElementById("modalAttachmentSection");
+      if (notice.attachmentUrl) {
+        attachSec.style.display = "block";
+        document.getElementById("modalAttachmentName").textContent = notice.attachmentName || "Attachment.pdf";
+        document.getElementById("modalDownloadBtn").href = notice.attachmentUrl;
+      } else {
+        attachSec.style.display = "none";
+      }
+
+      // Event RSVP Section inside modal
+      const rsvpSec = document.getElementById("modalRsvpSection");
+      const rsvpBtn = document.getElementById("modalRsvpBtn");
+      const rsvpStatus = document.getElementById("modalRsvpStatusText");
+      if (rsvpSec && rsvpBtn) {
+        if (notice.category === "event") {
+          rsvpSec.style.display = "block";
+          const isReg = myRegisteredEvents.some(e => e.noticeId === notice.id);
+          if (isReg) {
+            rsvpStatus.textContent = "✓ You are currently confirmed for this event.";
+            rsvpBtn.textContent = "Cancel RSVP";
+            rsvpBtn.className = "btn-outline";
+            rsvpBtn.style.color = "var(--color-danger)";
+            rsvpBtn.style.borderColor = "var(--color-danger)";
+            rsvpBtn.onclick = async () => {
+              await cancelMyEvent(notice.id);
+              openNoticeModal(notice.id);
+            };
+          } else {
+            rsvpStatus.textContent = "Reserve your seat for this event.";
+            rsvpBtn.textContent = "🎉 Register for Event";
+            rsvpBtn.className = "btn-primary";
+            rsvpBtn.style.color = "";
+            rsvpBtn.style.borderColor = "";
+            rsvpBtn.onclick = async () => {
+              await registerEventFromFeed(notice.id);
+              openNoticeModal(notice.id);
+            };
+          }
+        } else {
+          rsvpSec.style.display = "none";
+        }
+      }
+
+      document.getElementById("noticeModal").style.display = "flex";
+      renderFeed();
+    }
+
+    async function registerEventFromFeed(noticeId) {
+      const notice = allNotices.find(n => n.id === noticeId);
+      if (!notice) return;
+      await CampusConnectDB.registerForEvent(noticeId, notice);
+      myRegisteredEvents = await CampusConnectDB.getRegisteredEvents(currentUser.uid);
+      renderFeed();
+      if (activeTab === 'events') renderMyEvents();
+      if (activeTab === 'profile') renderProfileTab();
+      alert(`🎉 Registered! You are confirmed for "${notice.title}". Check "My Events" or "My Profile" anytime.`);
+    }
+
+    function closeModal() {
+      document.getElementById("noticeModal").style.display = "none";
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      const navIds = { feed: 'nav-dash', events: 'nav-events', bookmarks: 'nav-bookmarks', deadlines: 'nav-deadlines', profile: 'nav-profile' };
+      const tabContainers = { feed: 'tabFeed', events: 'tabEvents', profile: 'tabProfile' };
+
+      // Update nav active states
+      Object.values(navIds).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = '';
+      });
+      if (navIds[tab]) {
+        const activeEl = document.getElementById(navIds[tab]);
+        if (activeEl) activeEl.className = 'active';
+      }
+
+      // Show/hide main sections
+      const feedEl = document.getElementById('tabFeed');
+      const eventsEl = document.getElementById('tabEvents');
+      const profileEl = document.getElementById('tabProfile');
+      if (feedEl) feedEl.style.display = (tab === 'feed' || tab === 'bookmarks' || tab === 'deadlines') ? 'block' : 'none';
+      if (eventsEl) eventsEl.style.display = tab === 'events' ? 'block' : 'none';
+      if (profileEl) profileEl.style.display = tab === 'profile' ? 'block' : 'none';
+
+      if (tab === 'events') renderMyEvents();
+      if (tab === 'profile') renderProfileTab();
+      if (tab !== 'events' && tab !== 'profile') renderFeed();
+    }
+
+    async function renderMyEvents() {
+      myRegisteredEvents = await CampusConnectDB.getRegisteredEvents(currentUser.uid);
+      const container = document.getElementById('myEventsList');
+      if (myRegisteredEvents.length === 0) {
+        container.innerHTML = `<div class="glass-panel" style="text-align:center; padding: var(--space-8); color: var(--color-text-muted);"><h3>No events registered yet</h3><p style="font-size: var(--font-size-sm);">Browse the Notice Feed and click \"Register for Event\" on any event notice.</p></div>`;
+        return;
+      }
+      container.innerHTML = myRegisteredEvents.map(ev => `
+        <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-1);">
+              <span class="badge badge-event">${escapeHtml(ev.eventCategory || 'event')}</span>
+              <span style="font-size:11px; color:var(--color-success); font-weight:600;">● Confirmed</span>
+            </div>
+            <div style="font-weight:700; color:var(--color-primary); font-size:var(--font-size-base);">${escapeHtml(ev.eventTitle)}</div>
+            <div style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-top:2px;">🏢 ${escapeHtml(ev.eventDepartment)} &nbsp;•&nbsp; 📅 Registered: ${new Date(ev.registeredAt).toLocaleDateString(undefined,{dateStyle:'medium'})}</div>
+          </div>
+          <button onclick="cancelMyEvent('${ev.noticeId}')" class="btn-outline" style="font-size:11px; padding:4px 12px; color:var(--color-danger); border-color:var(--color-danger); white-space:nowrap;">Cancel RSVP</button>
+        </div>
+      `).join('');
+    }
+
+    async function cancelMyEvent(noticeId) {
+      if (!confirm('Cancel your RSVP for this event?')) return;
+      await CampusConnectDB.cancelEventRegistration(noticeId);
+      myRegisteredEvents = myRegisteredEvents.filter(e => e.noticeId !== noticeId);
+      renderMyEvents();
+    }
+
+    async function renderProfileTab() {
+      const user = CampusConnectAuth.getCurrentUser() || currentUser || { displayName: "Student", username: "student", role: "student" };
+      const uName = user.displayName || user.username || "Student";
+      document.getElementById('profileAvatar').textContent = uName.charAt(0).toUpperCase();
+      document.getElementById('profileName').textContent = uName;
+      document.getElementById('profileRole').textContent = (user.role || 'student').toUpperCase() + ' • ' + (user.department || 'General');
+      document.getElementById('profileUsername').textContent = '@' + (user.username || 'student');
+      document.getElementById('profileEmail').textContent = user.email || 'student@campusconnect.edu';
+      document.getElementById('profileDept').textContent = user.department || 'General';
+      document.getElementById('profileRoleBadge').textContent = (user.role || 'student').toUpperCase();
+
+      // Stats
+      const events = await CampusConnectDB.getRegisteredEvents(user.uid);
+      const reads = await CampusConnectDB.getReadNotices(user.uid);
+      document.getElementById('profileEventCount').textContent = events.length;
+      document.getElementById('profileNoticeCount').textContent = reads.length;
+      document.getElementById('profileBookmarkCount').textContent = bookmarks.size;
+
+      // Events list
+      const evList = document.getElementById('profileEventsList');
+      evList.innerHTML = events.length === 0
+        ? '<p style="font-size:var(--font-size-xs); color:var(--color-text-muted);">You have not registered for any events yet.</p>'
+        : events.map(ev => `
+          <div style="padding:var(--space-2) 0; border-bottom:1px solid var(--color-divider); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; font-size:var(--font-size-sm); color:var(--color-primary);">${escapeHtml(ev.eventTitle)}</div>
+              <div style="font-size:11px; color:var(--color-text-muted);">${escapeHtml(ev.eventDepartment)} • ${new Date(ev.registeredAt).toLocaleDateString()}</div>
+            </div>
+            <span style="font-size:11px; color:var(--color-success); font-weight:600;">✓ Confirmed</span>
+          </div>`).join('');
+
+      // Bookmarks list
+      const bmList = document.getElementById('profileBookmarksList');
+      const bookmarkedNotices = allNotices.filter(n => bookmarks.has(n.id));
+      bmList.innerHTML = bookmarkedNotices.length === 0
+        ? '<p style="font-size:var(--font-size-xs); color:var(--color-text-muted);">No bookmarked notices yet. Star any notice to save it here.</p>'
+        : bookmarkedNotices.map(n => `
+          <div style="padding:var(--space-2) 0; border-bottom:1px solid var(--color-divider); cursor:pointer;" onclick="openNoticeModal('${n.id}')">
+            <div style="font-weight:600; font-size:var(--font-size-sm); color:var(--color-primary);">${escapeHtml(n.title)}</div>
+            <div style="font-size:11px; color:var(--color-text-muted);">${escapeHtml(n.department)} • ${new Date(n.createdAt).toLocaleDateString()}</div>
+          </div>`).join('');
+    }
+
+    document.getElementById("studentSearch").addEventListener("input", renderFeed);
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
